@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import java.awt.FileDialog;
 
 import javax.swing.JFrame;
 import java.awt.GridLayout;
@@ -34,6 +35,8 @@ import javax.swing.JButton;
 import javax.swing.border.EmptyBorder;
 import javax.swing.SwingConstants;
 import java.awt.event.ActionListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Date;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
@@ -47,23 +50,25 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
-public class Interfas extends JFrame implements ActionListener{
+public class Interfas extends JFrame implements ActionListener,Runnable{
 	
 	static TimeSeries series = new TimeSeries("GRAFICA", Millisecond.class);
 	static TimeSeriesCollection datos = new TimeSeriesCollection(series);
 	static JFreeChart grafica = ChartFactory.createTimeSeriesChart("", "t", "v", datos, true, true, true);
 	final JPanel panelgrafica=new ChartPanel(grafica);
-	
 	XYPlot dibujo= grafica.getXYPlot();
 	XYLineAndShapeRenderer render= new XYLineAndShapeRenderer();
-	
-	  Second segundoformat;
-	  Millisecond milisegundoformat;
+	Second segundoformat;
+	Millisecond milisegundoformat;
 
-
-	int minuto=0;
-	
+	// Clases usadas
 	funcionesAD funcion;
+	Graficar graficadora;
+	FileDialog fd;
+	FileWriter writer;
+	
+	//
+	JTextArea AreaDeTexto;
 	
 	int bin1=0;
 	int bin2=0;
@@ -71,8 +76,10 @@ public class Interfas extends JFrame implements ActionListener{
 	int bin4=0;
 	byte sel=0;
 	
+	int minuto=0;
 	static double[] vector;
-	int longitud;
+	static int longitud;
+	static int TiempoMuestreo=10;
 	
 	JPanel panel;
 	JPanel panel_1;
@@ -116,16 +123,17 @@ public class Interfas extends JFrame implements ActionListener{
 	JLabel lblNewLabel_3; // Label Seleccion Canal
 	private JTextField textField; // Cambio TM
 	private JPanel panel_10;
+	private JButton btnNewButton_16;
 	
 
 	public Interfas() {
 		initialize();
-		render.setSeriesLinesVisible(0, true);	// Activar o desactivar las lineas conectoras entre puntos
+		render.setSeriesLinesVisible(0, false);	// Activar o desactivar las lineas conectoras entre puntos
 		render.setSeriesPaint(0, Color.BLUE);
 		render.setBaseOutlineStroke(new BasicStroke(0.1f));	// Tamaño de los puntos
 		dibujo.setRenderer(render);
 		
-		longitud=  1000;
+		longitud=  20000;
 		funcion= new funcionesAD(longitud);
 		
 	}
@@ -157,6 +165,9 @@ public class Interfas extends JFrame implements ActionListener{
 		gbl_panel_10.columnWeights = new double[]{0.0, Double.MIN_VALUE};
 		gbl_panel_10.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_10.setLayout(gbl_panel_10);
+		
+		
+		AreaDeTexto= new JTextArea(4,20);
 		
 		panel_3 = new JPanel();
 		GridBagConstraints gbc_panel_3 = new GridBagConstraints();
@@ -255,6 +266,10 @@ public class Interfas extends JFrame implements ActionListener{
 		panel_9.add(btnNewButton_15);
 		
 		panel_1.add(panel_9, BorderLayout.SOUTH);
+		
+		btnNewButton_16 = new JButton("Guardar");
+		btnNewButton_16.addActionListener(this);
+		panel_9.add(btnNewButton_16);
 		panel_1.add(panelgrafica, BorderLayout.CENTER);
 		
 		panel_8 = new JPanel();
@@ -397,8 +412,11 @@ public class Interfas extends JFrame implements ActionListener{
 			lblNewLabel_3.setText("Señal digital 4 seleccionada");
 		}
 		
-		if(e.getSource()==btnNewButton_14) {
-			lblNewLabel_2.setText(textField.getText()); 			
+		if(e.getSource()==btnNewButton_14) {	// Boton CambioMuestreo
+			lblNewLabel_2.setText(textField.getText());
+			
+			TiempoMuestreo = Integer.parseInt (textField.getText());
+			System.out.println("Tiempo de muestreo; "+ TiempoMuestreo);
 		}
 		
 		if(e.getSource()==btnNewButton_15) {	// boton limpiar
@@ -407,32 +425,43 @@ public class Interfas extends JFrame implements ActionListener{
 		}
 
 		if(e.getSource()==btnNewButton_13) {	//boton graficar
-
-			 
-			  for(int j=0;j<longitud;j++) {
-					System.out.print(j);
-					System.out.print(" HOLA ");
-					System.out.println(vector[j]); 
-					}
-	
-			  for(int i=0;i<longitud;i++) {
-				  
-			  //addOrUpdate()
-				  try {
-					Thread.sleep(1);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				  segundoformat  = new Second();
-				  milisegundoformat= new Millisecond();
-				  series.add(milisegundoformat,vector[i]);// los periodos de tiempo no se deben repetir
-			  
-			  
-			  }
+			
+			graficadora = new Graficar();		 
 	
 		}
 		
+		if(e.getSource()==btnNewButton_16) {	//boton guardar
+//			String cadena[]= new String[10];
+//			int co=9;
+//			cadena[1]="hola "+co;
+//			cadena[2]="mundo";
+//			System.out.println(cadena[1]);
+			GuargarComo();				 
+	
+		}				
+		
+	}
+	
+	public void GuargarComo() {
+		
+		fd = new FileDialog(this,"Guardar Datos",FileDialog.SAVE);
+		fd.setVisible(true);
+		
+		try {
+			//graficadora = new Graficar();
+			writer = new FileWriter(fd.getDirectory()+fd.getFile()+".txt");
+			writer.write(graficadora.buffer.toString());
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
 		
 	}
 

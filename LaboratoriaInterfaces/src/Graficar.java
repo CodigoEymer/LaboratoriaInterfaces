@@ -5,6 +5,7 @@ import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -21,54 +22,57 @@ import org.jfree.data.time.TimeSeriesCollection;
 public class Graficar extends Thread{
 	Visualpanel visual;
 	Interfas inter;
-	int minuto=0;
-	
-	static TimeSeries series = new TimeSeries("GRAFICA", Millisecond.class);
-	static TimeSeriesCollection datos = new TimeSeriesCollection(series);
-	static JFreeChart grafica = ChartFactory.createTimeSeriesChart("", "t", "v", datos, true, true, true);
-	final JPanel panelgrafica=new ChartPanel(grafica);
-	
-	XYPlot dibujo= grafica.getXYPlot();
-	XYLineAndShapeRenderer render= new XYLineAndShapeRenderer();
-	
-	funcionesAD funcion;
-	static double[] vector;
-	int longitud;
-	Second segundoformat;
 	Millisecond milisegundoformat;
+	int milisegundo=0;
+	int TamanoSerie;
+	String contadordato;
+	StringBuffer buffer;
 	
 	
 	public Graficar()
 	{
+		TamanoSerie=100;
+		inter.series.setMaximumItemCount(TamanoSerie);
+		buffer = new StringBuffer(inter.longitud*30);
 		this.start();
-		render.setSeriesLinesVisible(0, true);	// Activar o desactivar las lineas conectoras entre puntos
-		render.setSeriesPaint(0, Color.BLUE);
-		render.setBaseOutlineStroke(new BasicStroke(0.1f));	// Tamaño de los puntos
-		dibujo.setRenderer(render);
 		
-		longitud=  1000;
-		funcion= new funcionesAD(longitud);
-		
-
 	}
 	
 	
 	public void run() {
+		
+//		  for(int j=0;j<inter.longitud;j++) {
+//				System.out.print(j);
+//				System.out.print(" HOLA ");
+//				System.out.println(inter.vector[j]); 
+//				}
 	       	
-		for(int i=0;i<longitud;i++) {
+		for(int i=0;i<inter.longitud;i++) {
 			  
 			  //addOrUpdate()
 				  try {
 					Thread.sleep(1);
+					milisegundo++;
+					milisegundoformat= new Millisecond();
+					long mili= milisegundoformat.getMillisecond();
+					Second segundoformat = milisegundoformat.getSecond();
+					int segunto = segundoformat.getSecond();
+					
+					
+					if(milisegundo==inter.TiempoMuestreo) {
+						  inter.series.add(milisegundoformat,inter.vector[i]);// los periodos de tiempo no se deben repetir
+						  //textArea.append(String.valueOf(milisegundoformat)+" "+String.valueOf(inter.vector[i])+"\n");
+						  milisegundo=0;
+						  
+						  buffer.append(String.valueOf(segunto)+":"+mili+"	 "+String.valueOf(inter.vector[i])+"\n");
+						  //System.out.println(buffer);
+					  }
+					
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				  segundoformat  = new Second();
-				  milisegundoformat= new Millisecond();
-				  series.add(milisegundoformat,vector[i]);// los periodos de tiempo no se deben repetir
-			  
-			  
+			  		  
 			  }
 
 	}
