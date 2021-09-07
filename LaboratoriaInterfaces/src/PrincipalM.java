@@ -1,19 +1,25 @@
 import java.awt.BorderLayout;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 
 public class PrincipalM {
-	
-	
+	static HiloComunicador hiloC;
+	static String puertos[];
+	static Interfas window;
 	public static void main(String [] args)
-	{
+	{		
+		window = new Interfas();
+		window.setVisible(true);				
+		hiloC = new HiloComunicador();
 		
-		Interfas window = new Interfas();
-		window.setVisible(true);
-		
-		//Visualpanel visual = new Visualpanel();
-		//window.panel_1.add(visual, BorderLayout.CENTER);
-		
-		
+		//	Visualizador de puertos
+		puertos= hiloC.Vpuertos();
+		window.comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
+	}
+	
+	public static void cambioPuerto() {
+		puertos= hiloC.Vpuertos();
+		hiloC.reconectar();
 	}
 }

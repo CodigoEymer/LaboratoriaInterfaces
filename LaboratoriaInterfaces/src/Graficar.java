@@ -20,53 +20,63 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 public class Graficar extends Thread{
-	Visualpanel visual;
+	//Visualpanel visual;
 	Interfas inter;
 	Millisecond milisegundoformat;
-	int milisegundo=0;
 	int TamanoSerie;
 	String contadordato;
-	StringBuffer buffer;
+	static StringBuffer buffer;
+	static double data=0;
 	
 	
 	public Graficar()
 	{
 		TamanoSerie=100;
-		inter.series.setMaximumItemCount(TamanoSerie);
-		buffer = new StringBuffer(inter.longitud*30);
+		inter.series.setMaximumItemCount(TamanoSerie); //Tamaño maximo de la serie
+		buffer = new StringBuffer(10000);
 		this.start();
 		
 	}
 	
 	
 	public void run() {
-		
-//		  for(int j=0;j<inter.longitud;j++) {
-//				System.out.print(j);
-//				System.out.print(" HOLA ");
-//				System.out.println(inter.vector[j]); 
-//				}
+
 	       	
-		for(int i=0;i<inter.longitud;i++) {
-			  
-			  //addOrUpdate()
+		while(true) {
 				  try {
 					Thread.sleep(1);
-					milisegundo++;
 					milisegundoformat= new Millisecond();
 					long mili= milisegundoformat.getMillisecond();
 					Second segundoformat = milisegundoformat.getSecond();
-					int segunto = segundoformat.getSecond();
+					int segundo = segundoformat.getSecond();
+					Minute minutoformat  = segundoformat.getMinute();
+					int minuto = minutoformat.getMinute();
+					
+					//String filaFile =(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
+					//System.out.println(filaFile);
 					
 					
-					if(milisegundo==inter.TiempoMuestreo) {
-						  inter.series.add(milisegundoformat,inter.vector[i]);// los periodos de tiempo no se deben repetir
-						  //textArea.append(String.valueOf(milisegundoformat)+" "+String.valueOf(inter.vector[i])+"\n");
-						  milisegundo=0;
-						  
-						  buffer.append(String.valueOf(segunto)+":"+mili+"	 "+String.valueOf(inter.vector[i])+"\n");
-						  //System.out.println(buffer);
-					  }
+					if(HiloComunicador.ControlGráfica==1) {
+						if(HiloComunicador.DatoRecibido==1) {
+							HiloComunicador.DatoRecibido=0;
+							if(Interfas.Cdigital==0) {
+							  data=(HiloComunicador.DatosRecibidosProteusD)*0.01953125;	// Convierte el valor del ADC en voltaje
+							}else {
+								data=(HiloComunicador.DatosRecibidosProteusD);
+								if(data!=0) {
+									data=5;
+								}
+							}
+							  inter.series.add(milisegundoformat,data);// los periodos de tiempo no se deben repetir
+							  //textArea.append(String.valueOf(milisegundoformat)+" "+String.valueOf(inter.vector[i])+"\n");
+							  
+							  buffer.append(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
+							  //System.out.println(buffer);
+												
+						}
+					}
+					
+					
 					
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
