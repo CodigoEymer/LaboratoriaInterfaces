@@ -11,11 +11,15 @@ public class PrincipalM {
 	{		
 		window = new Interfas();
 		window.setVisible(true);				
-		hiloC = new HiloComunicador();
+		//hiloC = new HiloComunicador();
 		
 		//	Visualizador de puertos
-		puertos= hiloC.Vpuertos();
-		window.comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
+		//puertos= hiloC.Vpuertos();
+		//window.comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
+	}
+	
+	public HiloComunicador getHiloC(){
+		return this.hiloC;
 	}
 	
 	public static void cambioPuerto() {

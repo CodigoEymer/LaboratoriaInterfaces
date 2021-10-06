@@ -1,4 +1,5 @@
 import java.awt.EventQueue;
+import DAOint_proceso_vars_data.*;
 import java.awt.FileDialog;
 
 import javax.swing.JFrame;
@@ -66,8 +67,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class Interfas extends JFrame implements ActionListener,Runnable{
+	byte Cabecera=0x00;
+	byte Trama1=0x00;
+	byte Trama2=0x00;
+	int ControlEnvioCabecera=0;
+	
 	//HiloComunicador comu;
-	Graficar graf;
 	int inicioGraficar=0;
 	ImageIcon imagenPlay;
 	ImageIcon imagenStop;
@@ -89,6 +94,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	// Clases usadas
 	funcionesAD funcion;
 	Graficar graficadora;
+	HiloComunicador HiloC;
 	FileDialog fd;
 	FileWriter writer;
 	PrincipalM principalM;
@@ -170,6 +176,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	
 
 	public Interfas() {
+		
 		initialize();
 		render.setSeriesLinesVisible(0, false);	// Activar o desactivar las lineas conectoras entre puntos
 		render.setSeriesPaint(0, Color.BLUE);
@@ -199,8 +206,11 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	 */
 	private void initialize() {
 		
-		vector= new double[longitud];
+		graficadora = new Graficar();
+		HiloC= graficadora.getHiloC();
 		
+		vector= new double[longitud];
+
 
 		setTitle("GUI");
 		//setBounds(100, 100, 765, 498);
@@ -404,6 +414,8 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		panel_15 = new JPanel();
 		comboBoxPuertos = new JComboBox();
 		comboBoxPuertos.addActionListener(this);
+		String[] puertos=graficadora.getHiloC().Vpuertos();
+		comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
 
 		panel_15.add(comboBoxPuertos);
 
@@ -429,7 +441,8 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 				if (e.VK_ENTER==e.getKeyCode())
 		         {
 					txtCom.setEnabled(false);
-					HiloComunicador.puerto = txtCom.getText();
+					String puert= txtCom.getText();
+					graficadora.getHiloC().setPuerto(puert);
 		         }
 			}
 		});
@@ -594,13 +607,13 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	          }		
 		}
 		if(e.getSource()==comboBoxPuertos) {
-			
 			if (comboBoxPuertos.getSelectedIndex() != -1) {
-
 				String puertoB= (String)comboBoxPuertos.getItemAt(comboBoxPuertos.getSelectedIndex());
-				HiloComunicador.puerto=puertoB;
-				
-				principalM.cambioPuerto();
+				System.out.println(puertoB);
+				graficadora.getHiloC().desconectar();
+				graficadora.getHiloC().setPuerto(puertoB);
+				graficadora.getHiloC().conectar();
+				//graficadora.getHiloC().reconectar();
 			}
 		}
 		
@@ -626,125 +639,157 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 			else {lblNewLabel.setText("Señal 4 desactivada");bin4=0;sel-=8;}
 		}
 		if(e.getSource()==btnNewButton_8)	{// Boton aplicar
-			HiloComunicador.Cabecera=0x2F;
-			HiloComunicador.Trama1=sel;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Cabecera=0x2f;
+			Trama1=sel;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		
 		//Botones de canales analogos
 		
 		if(e.getSource()==btnNewButton) {
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 1 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x00;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x00;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		
 		if(e.getSource()==btnNewButton_1) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 2 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_1.setBackground(colorAzul);
 			lblNewLabel_3.setBackground(color);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x01;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x01;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		
 		if(e.getSource()==btnNewButton_2) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 3 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_2.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x02;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x02;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_3) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 4 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_3.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x03;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x03;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_4) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 5 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_4.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x04;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x04;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_5) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 6 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_5.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x05;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x05;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_6) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 7 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_6.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x06;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x06;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_7) {
-			Cdigital=0;
+			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 8 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_7.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x07;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x07;			
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		//Botones digitales
 		
 		if(e.getSource()==btnNewButton_9) {	
-			Cdigital=1;
+			//Cdigital=1;
+			HiloC.setCanal(1);
 			lblNewLabel_3.setText("Señal digital 1 seleccionada");
 			defaultColores("Digital");
 			btnNewButton_9.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x08;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x08;
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 			
 		}
 		if(e.getSource()==btnNewButton_10) {
-			Cdigital=2;
+			//Cdigital=2;
+			HiloC.setCanal(2);
 			lblNewLabel_3.setText("Señal digital 2 seleccionada");
 			defaultColores("Digital");
 			btnNewButton_10.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x09;
-			HiloComunicador.ControlEnvioCabecera=1;
+			Trama1=0x09;	
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		if(e.getSource()==btnNewButton_11) {
-			Cdigital=3;
+			//Cdigital=3;
+			HiloC.setCanal(3);
 			lblNewLabel_3.setText("Señal digital 3 seleccionada");
 			defaultColores("Digital");
-			btnNewButton_11.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x0A;
-			HiloComunicador.ControlEnvioCabecera=1;
+			btnNewButton_11.setBackground(colorAzul);			
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			Trama1=0x0A;
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
+			
 		}
 		if(e.getSource()==btnNewButton_12) {
-			Cdigital=4;
+			//Cdigital=4;
+			HiloC.setCanal(4);
 			lblNewLabel_3.setText("Señal digital 4 seleccionada");
 			defaultColores("Digital");
-			btnNewButton_12.setBackground(colorAzul);
-			HiloComunicador.Cabecera=0x1F;
-			HiloComunicador.Trama1=0x0B;
-			HiloComunicador.ControlEnvioCabecera=1;
+			btnNewButton_12.setBackground(colorAzul);		
+			Cabecera=0x1f;
+			HiloC.setCabecera(Cabecera);
+			Trama1=0x0B;
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
 		}
 		
 		if(e.getSource()==btnNewButton_14) {	// Boton CambioMuestreo
@@ -755,14 +800,14 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 			if(V>1 && V<65531) {
 				
 				Integer Desplazado= (TiempoMuestreo>>8);
-				byte trama1= TiempoMuestreo.byteValue();
-				byte trama2= Desplazado.byteValue();
+				Trama1= TiempoMuestreo.byteValue();
+				Trama2= Desplazado.byteValue();
 				
-				HiloComunicador.Cabecera=0x3F;
-				HiloComunicador.Trama1=trama1;
-				HiloComunicador.Trama2=trama2;
-				
-				HiloComunicador.ControlEnvioCabecera=2;
+				Cabecera=0x3f;
+				HiloC.setCabecera(Cabecera);
+				HiloC.setTrama1(Trama1);
+				HiloC.setTrama2(Trama2);
+				HiloC.setControlEnvioCabecera(2);
 				lblNewLabel_2.setText(textField.getText());
 				lblNewLabel_4.setText("...");
 				
@@ -778,15 +823,17 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		}
 
 		if(e.getSource()==btnNewButton_13) {	//boton graficar
-			if(inicioGraficar == 0) {
+			if(inicioGraficar == 0) {	// Cundo se empieza a graficar por primera vez
 				inicioGraficar=1;
-				graficadora = new Graficar();
+				graficadora.getHiloC().conectar();
 			}
 			
-			HiloComunicador.Cabecera=0x4f;
-			HiloComunicador.Trama1=0x01;
-			HiloComunicador.ControlEnvioCabecera=1;
-			HiloComunicador.ControlGráfica=1;
+			Cabecera=0x4f;
+			HiloC.setCabecera(Cabecera);
+			Trama1=0x01;
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
+			graficadora.setFlagGraficar(1);
 	
 		}
 		
@@ -794,11 +841,13 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 			
 			Auxbuffer = new StringBuffer(10000);
 			Auxbuffer = Graficar.buffer;
-			//graficadora = new Graficar();
-			HiloComunicador.Cabecera=0x4f;
-			HiloComunicador.Trama1=0x00;
-			HiloComunicador.ControlEnvioCabecera=1;
-			HiloComunicador.ControlGráfica=0;
+
+			Cabecera=0x4f;
+			HiloC.setCabecera(Cabecera);
+			Trama1=0x00;
+			HiloC.setTrama1(Trama1);
+			HiloC.setControlEnvioCabecera(1);
+			graficadora.setFlagGraficar(0);
 	
 		}
 		

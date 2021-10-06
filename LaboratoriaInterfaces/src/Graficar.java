@@ -22,22 +22,33 @@ import org.jfree.data.time.TimeSeriesCollection;
 public class Graficar extends Thread{
 	//Visualpanel visual;
 	Interfas inter;
+	HiloComunicador hilocomunicador;
+	
 	Millisecond milisegundoformat;
 	int TamanoSerie;
 	String contadordato;
 	static StringBuffer buffer;
 	static double data=0;
-	
+	float lectura=0;
+	int ControlGráfica = 0;
 	
 	public Graficar()
 	{
+		hilocomunicador= new HiloComunicador("COM1");
+		//hilocomunicador.conectar();
 		TamanoSerie=100;
 		inter.series.setMaximumItemCount(TamanoSerie); //Tamaño maximo de la serie
 		buffer = new StringBuffer(10000);
 		this.start();
 		
 	}
+	public HiloComunicador getHiloC() {
+		return hilocomunicador;
+	}
 	
+	public void setFlagGraficar(int ControlGráfica) {
+		this.ControlGráfica=ControlGráfica;
+	}
 	
 	public void run() {
 
@@ -56,17 +67,11 @@ public class Graficar extends Thread{
 					//System.out.println(filaFile);
 					
 					
-					if(HiloComunicador.ControlGráfica==1) {
-						if(HiloComunicador.DatoRecibido==1) {
-							HiloComunicador.DatoRecibido=0;
-							if(Interfas.Cdigital==0) {
-							  data=(HiloComunicador.DatosRecibidosProteusD)*0.01953125;	// Convierte el valor del ADC en voltaje
-							}else {
-								data=(HiloComunicador.DatosRecibidosProteusD);
-								if(data!=0) {
-									data=5;
-								}
-							}
+					if(ControlGráfica==1) {
+						if(hilocomunicador.getDatoRecibido()==1) {
+							hilocomunicador.setDatoRecibido();
+							float lectura= hilocomunicador.newLectura();						
+							data=(double)lectura;
 							  inter.series.add(milisegundoformat,data);// los periodos de tiempo no se deben repetir
 							  //textArea.append(String.valueOf(milisegundoformat)+" "+String.valueOf(inter.vector[i])+"\n");
 							  
