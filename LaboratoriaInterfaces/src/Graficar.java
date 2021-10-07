@@ -2,6 +2,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -19,10 +20,16 @@ import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import DAOint_proceso_vars_data.int_proceso_vars_dataT;
+//import Dao.*;
+
+//import DAOint_proceso_vars_data.*;
+
 public class Graficar extends Thread{
-	//Visualpanel visual;
 	Interfas inter;
-	HiloComunicador hilocomunicador;
+	PrincipalM principalM;
+	List<int_proceso_vars_dataT> Registros;
+	int_proceso_vars_dataT registro;
 	
 	Millisecond milisegundoformat;
 	int TamanoSerie;
@@ -31,58 +38,61 @@ public class Graficar extends Thread{
 	static double data=0;
 	float lectura=0;
 	int ControlGráfica = 0;
+	int c=0;
 	
 	public Graficar()
 	{
-		hilocomunicador= new HiloComunicador("COM1");
-		//hilocomunicador.conectar();
 		TamanoSerie=100;
 		inter.series.setMaximumItemCount(TamanoSerie); //Tamaño maximo de la serie
 		buffer = new StringBuffer(10000);
+		Registros=principalM.IMipvd.getAllint_proceso_vars_dataT();	
+
 		this.start();
 		
-	}
-	public HiloComunicador getHiloC() {
-		return hilocomunicador;
 	}
 	
 	public void setFlagGraficar(int ControlGráfica) {
 		this.ControlGráfica=ControlGráfica;
 	}
 	
-	public void run() {
-
-	       	
+	public void run() {	  
+		System.out.println("run");
 		while(true) {
-				  try {
-					Thread.sleep(1);
-					milisegundoformat= new Millisecond();
-					long mili= milisegundoformat.getMillisecond();
-					Second segundoformat = milisegundoformat.getSecond();
-					int segundo = segundoformat.getSecond();
-					Minute minutoformat  = segundoformat.getMinute();
-					int minuto = minutoformat.getMinute();
-					
-					//String filaFile =(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
-					//System.out.println(filaFile);
-					
-					
+				  try {										
+					  Thread.sleep(0,001);		
 					if(ControlGráfica==1) {
-						if(hilocomunicador.getDatoRecibido()==1) {
-							hilocomunicador.setDatoRecibido();
-							float lectura= hilocomunicador.newLectura();						
+						//System.out.println("***********************");
+						while(c<Registros.size()) {
+							Thread.sleep(1);
+							milisegundoformat= new Millisecond();
+							long mili= milisegundoformat.getMillisecond();
+							Second segundoformat = milisegundoformat.getSecond();
+							int segundo = segundoformat.getSecond();
+							Minute minutoformat  = segundoformat.getMinute();
+							int minuto = minutoformat.getMinute();
+							
+							System.out.println("c: "+c+" rSize: "+Registros.size());
+							registro=Registros.get(c);
+							lectura=registro.getValor();											
 							data=(double)lectura;
-							  inter.series.add(milisegundoformat,data);// los periodos de tiempo no se deben repetir
-							  //textArea.append(String.valueOf(milisegundoformat)+" "+String.valueOf(inter.vector[i])+"\n");
-							  
-							  buffer.append(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
-							  //System.out.println(buffer);
-												
+							inter.series.add(milisegundoformat,data);							  
+							buffer.append(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
+							c++;
 						}
-					}
-					
-					
-					
+						System.out.println("esperando llenado de registros");
+						Thread.sleep(1);	
+						
+						/*
+						if(conexionserial.getDatoRecibido()==1) {
+							conexionserial.setDatoRecibido();
+							float lectura= conexionserial.newLectura();						
+							data=(double)lectura;
+							inter.series.add(milisegundoformat,data);
+							  
+							buffer.append(String.valueOf(minuto)+":"+String.valueOf(segundo)+":"+mili+"	 "+String.valueOf(data)+"\n");
+							c++;												
+						}*/
+					}					
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();

@@ -1,29 +1,27 @@
 import java.awt.BorderLayout;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+
+import DAOint_proceso_vars_data.UpData;
+import DAOint_proceso_vars_data.ConexionSerial;
+import DAOint_proceso_vars_data.IMPLEMENTint_proceso_vars_data;
 
 public class PrincipalM {
 	static HiloComunicador hiloC;
 	static String puertos[];
 	static Interfas window;
+	static UpData updata;
+	static ConexionSerial conexionserial;
+	static IMPLEMENTint_proceso_vars_data IMipvd;
 	public static void main(String [] args)
-	{		
-		window = new Interfas();
-		window.setVisible(true);				
-		//hiloC = new HiloComunicador();
+	{	
+		updata = new UpData("COM1", "myintdb2021", "eymer", "1513");
+		conexionserial = updata.getConexionserial();
+		IMipvd=updata.getIMipvd();
 		
-		//	Visualizador de puertos
-		//puertos= hiloC.Vpuertos();
-		//window.comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
-	}
-	
-	public HiloComunicador getHiloC(){
-		return this.hiloC;
-	}
-	
-	public static void cambioPuerto() {
-		puertos= hiloC.Vpuertos();
-		hiloC.reconectar();
+		window = new Interfas();
+		window.setVisible(true);
+		
+		
 	}
 }

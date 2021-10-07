@@ -1,5 +1,4 @@
 import java.awt.EventQueue;
-import DAOint_proceso_vars_data.*;
 import java.awt.FileDialog;
 
 import javax.swing.JFrame;
@@ -27,6 +26,8 @@ import org.jfree.data.time.Minute;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+
+import DAOint_proceso_vars_data.ConexionSerial;
 
 import javax.swing.border.EtchedBorder;
 import java.awt.Color;
@@ -71,8 +72,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	byte Trama1=0x00;
 	byte Trama2=0x00;
 	int ControlEnvioCabecera=0;
-	
-	//HiloComunicador comu;
+
 	int inicioGraficar=0;
 	ImageIcon imagenPlay;
 	ImageIcon imagenStop;
@@ -91,15 +91,14 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	Second segundoformat;
 	Millisecond milisegundoformat;
 
-	// Clases usadas
+	// Clases usadas******************
 	funcionesAD funcion;
 	Graficar graficadora;
-	HiloComunicador HiloC;
 	FileDialog fd;
 	FileWriter writer;
 	PrincipalM principalM;
+	//********************************
 	
-	//
 	JTextArea AreaDeTexto;
 	
 	int bin1=0;
@@ -126,6 +125,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	JPanel panel_9;
 	
 	JComboBox comboBox;
+	DefaultComboBoxModel defaultCBM;	
 	JComboBox comboBoxPuertos;
 	JCheckBox chckbxNewCheckBox;
 	JCheckBox chckbxNewCheckBox_1;
@@ -174,7 +174,6 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	private JLabel lblNewLabel_6;
 	private JTextField txtCom;
 	
-
 	public Interfas() {
 		
 		initialize();
@@ -187,8 +186,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		funcion= new funcionesAD(longitud);
 		lblNewLabel_2.setText("2");
 		panel_8.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[]{panel_13, lblNewLabel_1, lblNewLabel_2, panel_12, btnNewButton_14, textField, lblNewLabel_4}));
-		
-		
+				
 		lblNewLabel_4 = new JLabel("...");
 		lblNewLabel_4.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_lblNewLabel_4 = new GridBagConstraints();
@@ -204,13 +202,10 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
-		
+	private void initialize() {		
 		graficadora = new Graficar();
-		HiloC= graficadora.getHiloC();
 		
 		vector= new double[longitud];
-
 
 		setTitle("GUI");
 		//setBounds(100, 100, 765, 498);
@@ -231,8 +226,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		gbl_panel_10.rowHeights = new int[] {34, 200, 0};
 		gbl_panel_10.columnWeights = new double[]{1.0};
 		gbl_panel_10.rowWeights = new double[]{0.0, 0.0, 0.0};
-		panel_10.setLayout(gbl_panel_10);
-		
+		panel_10.setLayout(gbl_panel_10);	
 		
 		AreaDeTexto= new JTextArea(4,20);
 		
@@ -343,7 +337,6 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		
 		btnNewButton_13 = new JButton("");	// Boton play
 		btnNewButton_13.addActionListener(this);
-		//btnNewButton_13.setSize(35, 30);
 		btnNewButton_13.setSize(30, 30);
 		imagenPlay = new ImageIcon("Media/play1.png");
 		Icon iconoPlay = new ImageIcon(imagenPlay.getImage().getScaledInstance(btnNewButton_13.getWidth(), btnNewButton_13.getHeight(), Image.SCALE_DEFAULT));
@@ -378,9 +371,7 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		panel_9.add(btnNewButton_16);
 		panel_11.add(panel_9);
 		
-		panel_14 = new JPanel();
-		//panel_11.add(panel_14);
-		
+		panel_14 = new JPanel();	
 		lblNewLabel_5 = new JLabel("MaxH");
 		panel_14.add(lblNewLabel_5);
 		
@@ -413,40 +404,19 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		
 		panel_15 = new JPanel();
 		comboBoxPuertos = new JComboBox();
+		comboBoxPuertos.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				String[] puertos=principalM.conexionserial.Vpuertos();
+				defaultCBM=new DefaultComboBoxModel(puertos);
+				comboBoxPuertos.setModel(defaultCBM);
+			}
+		});
 		comboBoxPuertos.addActionListener(this);
-		String[] puertos=graficadora.getHiloC().Vpuertos();
-		comboBoxPuertos.setModel(new DefaultComboBoxModel(puertos));
-
+		String[] puertos=principalM.conexionserial.Vpuertos();
+		defaultCBM=new DefaultComboBoxModel(puertos);
+		comboBoxPuertos.setModel(defaultCBM);
 		panel_15.add(comboBoxPuertos);
-
-		//panel_11.add(panel_15);
-		
-		lblNewLabel_6 = new JLabel("Puerto");
-		//panel_15.add(lblNewLabel_6);
-		
-		txtCom = new JTextField();
-		txtCom.setEnabled(false);
-		txtCom.setHorizontalAlignment(SwingConstants.CENTER);
-		txtCom.setText("COM3");
-		txtCom.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				txtCom.setEnabled(true);
-
-			}
-		});
-		txtCom.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.VK_ENTER==e.getKeyCode())
-		         {
-					txtCom.setEnabled(false);
-					String puert= txtCom.getText();
-					graficadora.getHiloC().setPuerto(puert);
-		         }
-			}
-		});
-		txtCom.setColumns(5);
 		
 		panel_16 = new JPanel();
 		panel_16.setLayout(new BoxLayout(panel_16, BoxLayout.Y_AXIS));
@@ -586,8 +556,6 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		gbc_btnNewButton_8.gridx = 0;
 		gbc_btnNewButton_8.gridy = 2;
 		panel_2.add(btnNewButton_8, gbc_btnNewButton_8);
-		
-
 	}
 
 	@Override
@@ -610,212 +578,157 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 			if (comboBoxPuertos.getSelectedIndex() != -1) {
 				String puertoB= (String)comboBoxPuertos.getItemAt(comboBoxPuertos.getSelectedIndex());
 				System.out.println(puertoB);
-				graficadora.getHiloC().desconectar();
-				graficadora.getHiloC().setPuerto(puertoB);
-				graficadora.getHiloC().conectar();
-				//graficadora.getHiloC().reconectar();
+				//principalM.conexionserial.desconectar();
+				principalM.conexionserial.setPuerto(puertoB);
+				//principalM.conexionserial.conectar();
+				principalM.conexionserial.reconectar();
 			}
-		}
-		
-		
+		}		
 		if(e.getSource()==chckbxNewCheckBox) {
 			if(bin1==0) {lblNewLabel.setText("Señal 1 activada");bin1=1;sel +=1;}
 			else {lblNewLabel.setText("Señal 1 desactivada");bin1=0;sel-=1;}
 			
-		}
-		
+		}		
 		if(e.getSource()==chckbxNewCheckBox_1) {
 			if(bin2==0) {lblNewLabel.setText("Señal 2 activada");bin2=1;sel+=2;}
 			else {lblNewLabel.setText("Señal 2 desactivada");bin2=0;sel-=2;}
-		}
-			
+		}			
 		if(e.getSource()==chckbxNewCheckBox_2)	{
 			if(bin3==0) {lblNewLabel.setText("Señal 3 activada");bin3=1;sel+=4;}
 			else {lblNewLabel.setText("Señal 3 desactivada");bin3=0;sel-=4;}
-		}
-		
+		}		
 		if(e.getSource()==chckbxNewCheckBox_3)	{
 			if(bin4==0) {lblNewLabel.setText("Señal 4 activada");bin4=1;sel+=8;}
 			else {lblNewLabel.setText("Señal 4 desactivada");bin4=0;sel-=8;}
 		}
 		if(e.getSource()==btnNewButton_8)	{// Boton aplicar
-			Cabecera=0x2f;
-			Trama1=sel;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			Trama1=sel;		
+			principalM.updata.comandoActiSalidaCanal(Trama1);
 		}
 		
 		//Botones de canales analogos
 		
 		if(e.getSource()==btnNewButton) {
-			HiloC.setCanal(0);
+			principalM.conexionserial.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 1 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton.setBackground(colorAzul);
 			Trama1=0x00;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		
 		if(e.getSource()==btnNewButton_1) {
-			HiloC.setCanal(0);
+			
 			lblNewLabel_3.setText("Señal analoga 2 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_1.setBackground(colorAzul);
 			lblNewLabel_3.setBackground(color);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x01;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		
-		if(e.getSource()==btnNewButton_2) {
-			HiloC.setCanal(0);
+		if(e.getSource()==btnNewButton_2) {	
 			lblNewLabel_3.setText("Señal analoga 3 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_2.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x02;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_3) {
-			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 4 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_3.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x03;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_4) {
-			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 5 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_4.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x04;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_5) {
-			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 6 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_5.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x05;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_6) {
-			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 7 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_6.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(0);
 			Trama1=0x06;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_7) {
-			HiloC.setCanal(0);
 			lblNewLabel_3.setText("Señal analoga 8 seleccionada");
 			defaultColores("Analogo");
 			btnNewButton_7.setBackground(colorAzul);
-			Trama1=0x07;			
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			//HiloC.setCanal(0);
+			principalM.conexionserial.setCanal(0);
+			Trama1=0x07;
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		//Botones digitales
 		
 		if(e.getSource()==btnNewButton_9) {	
-			//Cdigital=1;
-			HiloC.setCanal(1);
 			lblNewLabel_3.setText("Señal digital 1 seleccionada");
 			defaultColores("Digital");
 			btnNewButton_9.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(1);
 			Trama1=0x08;
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 			
 		}
 		if(e.getSource()==btnNewButton_10) {
-			//Cdigital=2;
-			HiloC.setCanal(2);
 			lblNewLabel_3.setText("Señal digital 2 seleccionada");
 			defaultColores("Digital");
 			btnNewButton_10.setBackground(colorAzul);
-			Trama1=0x09;	
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.conexionserial.setCanal(2);
+			Trama1=0x09;
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		if(e.getSource()==btnNewButton_11) {
-			//Cdigital=3;
-			HiloC.setCanal(3);
 			lblNewLabel_3.setText("Señal digital 3 seleccionada");
 			defaultColores("Digital");
-			btnNewButton_11.setBackground(colorAzul);			
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
+			btnNewButton_11.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(3);
 			Trama1=0x0A;
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 			
 		}
 		if(e.getSource()==btnNewButton_12) {
-			//Cdigital=4;
-			HiloC.setCanal(4);
+
 			lblNewLabel_3.setText("Señal digital 4 seleccionada");
 			defaultColores("Digital");
-			btnNewButton_12.setBackground(colorAzul);		
-			Cabecera=0x1f;
-			HiloC.setCabecera(Cabecera);
+			btnNewButton_12.setBackground(colorAzul);
+			principalM.conexionserial.setCanal(4);
 			Trama1=0x0B;
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoSelCanal(Trama1);
 		}
 		
 		if(e.getSource()==btnNewButton_14) {	// Boton CambioMuestreo
-
-
 			TiempoMuestreo= Integer.parseInt (textField.getText());
 			Double V=Double.valueOf(textField.getText());
-			if(V>1 && V<65531) {
-				
+			if(V>1 && V<65531) {				
 				Integer Desplazado= (TiempoMuestreo>>8);
 				Trama1= TiempoMuestreo.byteValue();
-				Trama2= Desplazado.byteValue();
-				
-				Cabecera=0x3f;
-				HiloC.setCabecera(Cabecera);
-				HiloC.setTrama1(Trama1);
-				HiloC.setTrama2(Trama2);
-				HiloC.setControlEnvioCabecera(2);
+				Trama2= Desplazado.byteValue();			
+				principalM.updata.comandoCambioTM(Trama1, Trama2);
 				lblNewLabel_2.setText(textField.getText());
 				lblNewLabel_4.setText("...");
 				
 			}else {
-				lblNewLabel_4.setText("Favor digitar un valor valido entre 2 y  65530");
-				
-			}
-			
+				lblNewLabel_4.setText("Favor digitar un valor valido entre 2 y  65530");				
+			}			
 		}
 		
 		if(e.getSource()==btnNewButton_15) {	// boton limpiar
@@ -823,37 +736,24 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		}
 
 		if(e.getSource()==btnNewButton_13) {	//boton graficar
-			if(inicioGraficar == 0) {	// Cundo se empieza a graficar por primera vez
+			if(inicioGraficar == 0) {	// Cuando se empieza a graficar por primera vez
 				inicioGraficar=1;
-				graficadora.getHiloC().conectar();
 			}
-			
-			Cabecera=0x4f;
-			HiloC.setCabecera(Cabecera);
-			Trama1=0x01;
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			principalM.updata.comandoGraficar();
 			graficadora.setFlagGraficar(1);
-	
+			
 		}
 		
 		if(e.getSource()==btnNewButton_17) {	//boton Detener
 			
 			Auxbuffer = new StringBuffer(10000);
-			Auxbuffer = Graficar.buffer;
-
-			Cabecera=0x4f;
-			HiloC.setCabecera(Cabecera);
-			Trama1=0x00;
-			HiloC.setTrama1(Trama1);
-			HiloC.setControlEnvioCabecera(1);
+			Auxbuffer = Graficar.buffer;			
+			principalM.updata.comandoPararGraficar();
 			graficadora.setFlagGraficar(0);
-	
 		}
 		
 		if(e.getSource()==btnNewButton_16) {	//boton guardar
-			GuargarComo();				 
-	
+			GuargarComo();				 	
 		}				
 		
 	}
@@ -861,18 +761,15 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 	public void GuargarComo() {
 		
 		fd = new FileDialog(this,"Guardar Datos",FileDialog.SAVE);
-		fd.setVisible(true);
-		
+		fd.setVisible(true);		
 		try {
-			//graficadora = new Graficar();
 			writer = new FileWriter(fd.getDirectory()+fd.getFile()+".txt");
 			writer.write(Auxbuffer.toString());
 			writer.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
+		}		
 	}
 	
 	private void defaultColores(String tipoCanal) {
@@ -894,7 +791,6 @@ public class Interfas extends JFrame implements ActionListener,Runnable{
 		}
 	}
 	
-
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
