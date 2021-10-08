@@ -21,7 +21,6 @@ public class PrincipalM {
 		
 		window = new Interfas();
 		window.setVisible(true);
-		
-		
+			
 	}
 }
